@@ -172,3 +172,34 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Data files
+# CSVファイルを一般的に無視しつつ、特定のデータファイルはGitで追跡する
+*.csv
+*.xlsx
+*.xls
+*.db
+*.sqlite3
+!data/raw/WA_Fn-UseC_-HR-Employee-Attrition.csv
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Local configuration file
+local_config.yaml
