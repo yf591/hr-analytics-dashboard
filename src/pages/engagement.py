@@ -67,9 +67,31 @@ def show():
         sat_counts = df[f'{selected_satisfaction}_Level'].value_counts().reset_index()
         sat_counts.columns = ['Level', 'Count']
         
+        # 満足度レベルの順序を設定
+        sat_counts['Level'] = pd.Categorical(
+            sat_counts['Level'], 
+            categories=['低', '中低', '中高', '高'], 
+            ordered=True
+        )
+        sat_counts = sat_counts.sort_values('Level')
+        
+        # カスタム配色を設定（満足度が低いから高いまで、直感的な色で表現）
+        custom_colors = {'低': '#FF5252', '中低': '#FFA726', '中高': '#66BB6A', '高': '#42A5F5'}
+        
         fig = px.pie(sat_counts, values='Count', names='Level',
                     title=f"{col_name_map[selected_satisfaction]}の分布",
-                    color_discrete_sequence=px.colors.sequential.Viridis)
+                    color='Level',
+                    color_discrete_map=custom_colors)
+        
+        # 凡例の位置を調整
+        fig.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="center",
+            x=0.5
+        ))
+        
         st.plotly_chart(fig, use_container_width=True)
         
         # 満足度クロス分析

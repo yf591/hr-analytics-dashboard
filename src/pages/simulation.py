@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, r2_score, mean_absolute_error
+from sklearn.metrics import roc_auc_score, roc_curve, precision_recall_curve
 import xgboost as xgb
 import lightgbm as lgb
 from src.models.attrition import MODELS
@@ -32,6 +33,25 @@ def show():
     
     with tab1:
         st.header("離職予測モデル")
+        
+        # モデル選択UI
+        attrition_model_type = st.selectbox(
+            "離職予測モデルを選択してください",
+            options=list(MODELS.keys()),
+            index=0,  # デフォルトはランダムフォレスト
+            help="異なる分類モデルを選択して精度を比較できます"
+        )
+        
+        # 選択したモデルの説明
+        model_descriptions = {
+            "ランダムフォレスト": "複数の決定木を組み合わせた手法で、高い予測精度と解釈性のバランスが取れたモデルです。",
+            "勾配ブースティング": "逐次的に弱学習器を組み合わせることで高い精度を実現します。過学習に強い特性があります。",
+            "ロジスティック回帰": "古典的な統計手法ですが、解釈性が高く、特徴量の影響を直接係数として理解できます。",
+            "XGBoost": "勾配ブースティングを高速化した手法で、多くのデータ分析コンペで優れた性能を示しています。",
+            "LightGBM": "ツリーベースの勾配ブースティング手法で、大規模データに対しても高速で効率的に動作します。"
+        }
+        
+        st.info(model_descriptions[attrition_model_type])
         
         # モデルの構築と評価
         st.subheader("離職予測モデルの性能")
@@ -69,7 +89,7 @@ def show():
         # モデルパイプライン
         attrition_pipe = Pipeline(steps=[
             ('preprocessor', preprocessor),
-            ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+            ('classifier', MODELS[attrition_model_type])
         ])
         
         # データの分割
@@ -77,19 +97,35 @@ def show():
         
         # モデルの学習
         with st.spinner('モデルを学習中...'):
-            attrition_pipe.fit(X_train, y_train)
+            # XGBoostの場合は、文字列ラベル('Yes', 'No')を数値ラベル(1, 0)に変換
+            if attrition_model_type == "XGBoost":
+                # y_trainをYes=1, No=0の数値に変換
+                y_train_xgb = (y_train == 'Yes').astype(int)
+                # 変換したラベルでXGBoostモデルを学習
+                attrition_pipe.fit(X_train, y_train_xgb)
+            else:
+                # 他のモデルは通常通り文字列ラベルで学習
+                attrition_pipe.fit(X_train, y_train)
         
         # テストデータでの予測
-        y_pred = attrition_pipe.predict(X_test)
+        if attrition_model_type == "XGBoost":
+            # 予測は数値で返されるので、Yes/Noの形式に戻す
+            y_pred_proba = attrition_pipe.predict_proba(X_test)[:, 1]
+            y_pred = np.where(y_pred_proba >= 0.5, 'Yes', 'No')
+        else:
+            y_pred = attrition_pipe.predict(X_test)
         
         # モデルの評価
         accuracy = accuracy_score(y_test, y_pred)
+        auc_score = roc_auc_score(y_test, attrition_pipe.predict_proba(X_test)[:, 1])
         
         # 結果表示
         col1, col2 = st.columns(2)
         
         with col1:
+            st.write(f"選択されたモデル: **{attrition_model_type}**")
             st.metric("モデル精度", f"{accuracy:.2%}")
+            st.metric("ROC-AUC", f"{auc_score:.2f}")
             
             # 混同行列
             cm = confusion_matrix(y_test, y_pred)
@@ -101,6 +137,39 @@ def show():
             
             st.write("混同行列:")
             st.dataframe(cm_df)
+            
+            # ROC曲線
+            if attrition_model_type == "XGBoost":
+                # XGBoostは数値ラベルでのポジティブクラスを1とする
+                fpr, tpr, _ = roc_curve(y_test == "Yes", attrition_pipe.predict_proba(X_test)[:, 1])
+            else:
+                # 他のモデルは通常通り文字列ラベル対応
+                fpr, tpr, _ = roc_curve(y_test, attrition_pipe.predict_proba(X_test)[:, 1], pos_label="Yes")
+            
+            roc_df = pd.DataFrame({'FPR': fpr, 'TPR': tpr})
+            
+            fig_roc = px.line(
+                roc_df, x='FPR', y='TPR',
+                title=f"ROC曲線 (AUC: {auc_score:.2f})",
+                labels={'FPR': '偽陽性率', 'TPR': '真陽性率'}
+            )
+            
+            # 対角線（ランダム予測のライン）を追加
+            fig_roc.add_trace(
+                go.Scatter(
+                    x=[0, 1], y=[0, 1],
+                    mode='lines',
+                    line=dict(color='red', dash='dash'),
+                    name='ランダム予測'
+                )
+            )
+            
+            fig_roc.update_layout(
+                xaxis=dict(range=[0, 1]),
+                yaxis=dict(range=[0, 1])
+            )
+            
+            st.plotly_chart(fig_roc, use_container_width=True)
         
         with col2:
             # 特徴量重要度
@@ -109,11 +178,22 @@ def show():
                 list(attrition_pipe.named_steps['preprocessor'].transformers_[1][1].get_feature_names_out(categorical_features))
             )
             
-            feature_importance = pd.DataFrame(
-                attrition_pipe.named_steps['classifier'].feature_importances_,
-                index=feature_names,
-                columns=['importance']
-            ).sort_values('importance', ascending=False)
+            # モデルタイプに応じた特徴量重要度の取得
+            if attrition_model_type == "ロジスティック回帰":
+                # ロジスティック回帰モデルの場合は係数を使用
+                importances = np.abs(attrition_pipe.named_steps['classifier'].coef_[0])
+                feature_importance = pd.DataFrame(
+                    importances,
+                    index=feature_names,
+                    columns=['importance']
+                ).sort_values('importance', ascending=False)
+            else:
+                # ツリーベースモデルの場合は特徴量重要度を使用
+                feature_importance = pd.DataFrame(
+                    attrition_pipe.named_steps['classifier'].feature_importances_,
+                    index=feature_names,
+                    columns=['importance']
+                ).sort_values('importance', ascending=False)
             
             # 上位10個の特徴量のみ表示
             top_features = feature_importance.head(10)

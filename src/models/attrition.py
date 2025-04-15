@@ -67,7 +67,8 @@ MODELS = {
         n_estimators=config["models"]["attrition"]["hyperparameters"]["XGBoost"].get("n_estimators", 100),
         max_depth=config["models"]["attrition"]["hyperparameters"]["XGBoost"].get("max_depth", 6),
         learning_rate=config["models"]["attrition"]["hyperparameters"]["XGBoost"].get("learning_rate", 0.1),
-        random_state=42
+        random_state=42,
+        enable_categorical=True  # カテゴリカル変数を処理可能にする
     ),
     "LightGBM": lgb.LGBMClassifier(
         n_estimators=config["models"]["attrition"]["hyperparameters"]["LightGBM"].get("n_estimators", 100),

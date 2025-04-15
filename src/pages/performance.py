@@ -52,9 +52,31 @@ def show():
         perf_counts = df['PerformanceLevel'].value_counts().reset_index()
         perf_counts.columns = ['PerformanceLevel', 'Count']
         
+        # カスタム配色を設定（業績が低いから高いまで、直感的な色で表現）
+        custom_colors = {'低': '#FF6666', '中': '#FFCC66', '高': '#66CC66', '最高': '#6666FF'}
+        
+        # 業績評価レベルの順序を明示的に設定
+        perf_counts['PerformanceLevel'] = pd.Categorical(
+            perf_counts['PerformanceLevel'], 
+            categories=['低', '中', '高', '最高'], 
+            ordered=True
+        )
+        perf_counts = perf_counts.sort_values('PerformanceLevel')
+        
         fig = px.pie(perf_counts, values='Count', names='PerformanceLevel',
                     title="業績評価の分布",
-                    color_discrete_sequence=px.colors.sequential.Viridis)
+                    color='PerformanceLevel',
+                    color_discrete_map=custom_colors)
+        
+        # 凡例の位置を調整
+        fig.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="center",
+            x=0.5
+        ))
+        
         st.plotly_chart(fig, use_container_width=True)
         
         # 部門・役職別の業績評価
