@@ -6,8 +6,8 @@ import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 from src.data.loader import load_hr_data
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, GradientBoostingRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, GradientBoostingRegressor, GradientBoostingClassifier
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -86,10 +86,22 @@ def show():
             ]
         )
         
-        # モデルパイプライン
+        # モデルパイプライン - 毎回新しいモデルインスタンスを作成
+        if attrition_model_type == "ランダムフォレスト":
+            model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+        elif attrition_model_type == "勾配ブースティング":
+            model = GradientBoostingClassifier(n_estimators=100, max_depth=5, random_state=42)
+        elif attrition_model_type == "ロジスティック回帰":
+            model = LogisticRegression(C=1.0, class_weight='balanced', random_state=42)
+        elif attrition_model_type == "XGBoost":
+            model = xgb.XGBClassifier(n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42, enable_categorical=True)
+        elif attrition_model_type == "LightGBM":
+            model = lgb.LGBMClassifier(n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42)
+
+        # 修正後のパイプライン構築
         attrition_pipe = Pipeline(steps=[
             ('preprocessor', preprocessor),
-            ('classifier', MODELS[attrition_model_type])
+            ('classifier', model)  # 新しく生成したモデルを使用
         ])
         
         # データの分割
@@ -97,19 +109,17 @@ def show():
         
         # モデルの学習
         with st.spinner('モデルを学習中...'):
-            # XGBoostの場合は、文字列ラベル('Yes', 'No')を数値ラベル(1, 0)に変換
-            if attrition_model_type == "XGBoost":
-                # y_trainをYes=1, No=0の数値に変換
-                y_train_xgb = (y_train == 'Yes').astype(int)
-                # 変換したラベルでXGBoostモデルを学習
-                attrition_pipe.fit(X_train, y_train_xgb)
+            # XGBoostとLightGBMの場合は、文字列ラベル('Yes', 'No')を数値ラベル(1, 0)に変換
+            if attrition_model_type in ["XGBoost", "LightGBM"]:
+                # 両方のモデルで同じ処理を適用
+                y_train_num = (y_train == 'Yes').astype(int)
+                attrition_pipe.fit(X_train, y_train_num)
             else:
                 # 他のモデルは通常通り文字列ラベルで学習
                 attrition_pipe.fit(X_train, y_train)
         
-        # テストデータでの予測
-        if attrition_model_type == "XGBoost":
-            # 予測は数値で返されるので、Yes/Noの形式に戻す
+        # テストデータでの予測も同様に修正
+        if attrition_model_type in ["XGBoost", "LightGBM"]:
             y_pred_proba = attrition_pipe.predict_proba(X_test)[:, 1]
             y_pred = np.where(y_pred_proba >= 0.5, 'Yes', 'No')
         else:

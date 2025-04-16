@@ -1,8 +1,12 @@
-import streamlit as st
-import pandas as pd
+import sys
 import os
 
-# 自作モジュールとページをインポート
+# プロジェクトルートをPythonパスに追加
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import streamlit as st
+import pandas as pd
+# 以下は元のコードをそのまま使用
 from src.data.loader import load_hr_data
 from src.pages import attrition, recruitment, performance, compensation, engagement, productivity, simulation, home
 
