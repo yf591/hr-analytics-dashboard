@@ -203,3 +203,31 @@ Thumbs.db
 
 # Local configuration file
 local_config.yaml
+
+# ----------------
+# 追加する機密ファイル対策
+# ----------------
+
+# Kaggle API認証情報 - 機密情報
+.kaggle/
+.kaggle/*.json
+
+# 設定ファイル - 環境ごとに異なる可能性があるもの
+config.yaml
+config.yml
+# サンプル設定ファイルは追跡する（存在する場合）
+!config.yaml.example
+!config.yml.example
+
+# 一時的な設定ファイル
+temp_*
+*_temp.*
+*.toml
+# 例外: 特定のtomlファイルを追跡したい場合は、以下のように指定
+!pyproject.toml
+!poetry.toml
+
+# ローカル開発用の一時ファイル
+.*.swp
+.*.swo
+*~
