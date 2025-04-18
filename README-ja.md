@@ -78,6 +78,8 @@ streamlit run src/app.py
 
 ブラウザで自動的に `http://localhost:8501` が開き、ダッシュボードが表示されます。
 
+**※詳しい使い方は[ユーザーガイド](https://github.com/yf591/hr-analytics-dashboard/blob/main/docs/user_guide.md)をご覧ください**
+
 ## 📂 リポジトリ構成
 
 ```
