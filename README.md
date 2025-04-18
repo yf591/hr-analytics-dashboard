@@ -78,6 +78,9 @@ streamlit run src/app.py
 
 The dashboard will automatically open in your browser at `http://localhost:8501`.
 
+
+**Please refer to [the user guide](https://github.com/yf591/hr-analytics-dashboard/blob/main/docs/user_guide.md) for detailed instructions.**
+
 ## 📂 Repository Structure
 
 ```
