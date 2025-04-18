@@ -281,7 +281,7 @@ Supported data formats:
 ### Machine Learning Models
 
 #### Attrition Prediction Model
-- **Algorithms**: Random Forest, Gradient Boosting, Logistic Regression
+- **Algorithms**: Random Forest, Gradient Boosting, Logistic Regression, XGBoost, LightGBM
 - **Features**: Tenure, compensation level, performance ratings, promotion intervals, working hours, etc.
 - **Evaluation Metrics**: AUC-ROC, accuracy, recall
 - **Explainability**: Model interpretation using SHAP values
