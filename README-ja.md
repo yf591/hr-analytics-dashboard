@@ -336,17 +336,6 @@ hr-analytics-dashboard/
 
 - [yf591](https://github.com/yf591)
 
-## 📚 参考資料
-
-- [HR Analytics: A Comprehensive Guide](https://example.com/hr-analytics-guide)
-- [Machine Learning for HR Applications](https://example.com/ml-for-hr)
-- [Data Visualization Best Practices](https://example.com/dataviz-practices)
-
-## 🙏 謝辞
-
-- このプロジェクトで使用している公開データセットの提供者に感謝いたします。
-- Streamlit、Plotly、Scikit-learnなどのオープンソースライブラリの開発者に感いたします。
-
 ---
 
 <!-- ## 連絡先

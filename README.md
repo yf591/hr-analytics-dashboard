@@ -330,17 +330,6 @@ This project is released under the MIT License. See the [LICENSE](./LICENSE) fil
 
 - [yf591](https://github.com/yf591)
 
-## 📚 References
-
-- [HR Analytics: A Comprehensive Guide](https://example.com/hr-analytics-guide)
-- [Machine Learning for HR Applications](https://example.com/ml-for-hr)
-- [Data Visualization Best Practices](https://example.com/dataviz-practices)
-
-## 🙏 Acknowledgements
-
-- Thanks to the providers of the public datasets used in this project
-- Thanks to the developers of the amazing open-source libraries like Streamlit, Plotly, and Scikit-learn
-
 ---
 <!-- 
 ## Contact
