@@ -7,6 +7,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from src.data.loader import load_hr_data
 from scipy import stats as scipy_stats  # 名前の衝突を避けるため変更
+# レスポンシブ対応と PDF 出力用のユーティリティをインポート
+from src.utils.layout_utils import (
+    display_optimized_chart,
+    create_responsive_columns,
+    add_page_break,
+    format_dataframe_for_display
+)
 
 def show():
     """
@@ -27,7 +34,8 @@ def show():
     # 労働スタイルの概要
     st.header("労働スタイルの概要")
     
-    col1, col2, col3 = st.columns(3)
+    # レスポンシブ対応のカラムレイアウト
+    col1, col2, col3 = create_responsive_columns([1, 1, 1])
     
     with col1:
         overtime_pct = (df['OverTime'] == 'Yes').mean() * 100
@@ -68,12 +76,15 @@ def show():
             text=[f"{val:.1f}%" for val in overtime_by_dept['OvertimePercentage']],
             textposition='outside'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 残業と勤務年数・年齢の関係
         st.subheader("残業と勤続年数・年齢の関係")
         
-        col1, col2 = st.columns(2)
+        # レスポンシブ対応のカラムレイアウト
+        col1, col2 = create_responsive_columns()
         
         with col1:
             # 勤続年数と残業の関係
@@ -87,7 +98,8 @@ def show():
                          markers=True,
                          labels={'OvertimePercentage': '残業率 (%)', 'YearsAtCompany': '勤続年数'})
             
-            st.plotly_chart(fig, use_container_width=True)
+            # 最適化した図を表示
+            display_optimized_chart(fig)
         
         with col2:
             # 年齢と残業の関係
@@ -111,7 +123,12 @@ def show():
                 text=[f"{val:.1f}%" for val in age_overtime['OvertimePercentage']],
                 textposition='outside'
             )
-            st.plotly_chart(fig, use_container_width=True)
+            
+            # 最適化した図を表示
+            display_optimized_chart(fig)
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # 出張頻度分析
         st.subheader("出張頻度の分析")
@@ -145,7 +162,8 @@ def show():
         if group_by == 'JobRole':
             fig.update_layout(xaxis_tickangle=-45)
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 出張頻度と残業の関係
         st.subheader("出張頻度と残業の関係")
@@ -166,10 +184,15 @@ def show():
             text=[f"{val:.1f}%" for val in travel_overtime['OvertimePercentage']],
             textposition='outside'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        
+        # 最適化した図を表示
+        display_optimized_chart(fig)
     
     with tab2:
         st.header("生産性要因分析")
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # ワークライフバランスと業績の関係
         st.subheader("ワークライフバランスと業績の関係")
@@ -182,7 +205,8 @@ def show():
                     color_continuous_scale='Viridis',
                     text_auto='.2f')
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 残業と業績の関係
         st.subheader("残業と業績の関係")
@@ -195,7 +219,8 @@ def show():
                     color_continuous_scale='Viridis',
                     text_auto='.2f')
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 職務満足度と業績の関係
         st.subheader("職務満足度と業績の関係")
@@ -232,7 +257,11 @@ def show():
                      markers=True,
                      labels={'SatisfactionLevel': '満足度レベル', 'AveragePerformance': '平均業績評価'})
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # 通勤距離と業績/満足度の関係
         st.subheader("通勤距離と業績/満足度の関係")
@@ -263,7 +292,8 @@ def show():
                     color_continuous_scale='Viridis',
                     text_auto='.2f')
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 残業率と通勤距離の関係
         commute_overtime = df.groupby('CommuteDistanceGroup')['OverTime'].apply(
@@ -282,11 +312,16 @@ def show():
             text=[f"{val:.1f}%" for val in commute_overtime['OvertimePercentage']],
             textposition='outside'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        
+        # 最適化した図を表示
+        display_optimized_chart(fig)
     
     with tab3:
         st.header("生産性最適化シミュレーション")
         st.info("注: このセクションはシミュレーションデータに基づいています。実際の意思決定には追加データが必要です。")
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # 現在の生産性指標の計算
         current_overtime_rate = (df['OverTime'] == 'Yes').mean() * 100
@@ -316,7 +351,8 @@ def show():
         long_term_perf_impact = wlb_improvement * 0.3  # WLB 15%向上 → 業績 4.5%向上と仮定
         
         # シミュレーション結果の表示
-        col1, col2 = st.columns(2)
+        # レスポンシブ対応のカラムレイアウト
+        col1, col2 = create_responsive_columns()
         
         with col1:
             st.subheader("短期的影響（3ヶ月）")
@@ -361,6 +397,9 @@ def show():
                 f"{current_perf_rating * (1 + short_term_perf_impact + long_term_perf_impact):.2f}",
                 f"{(short_term_perf_impact + long_term_perf_impact)*100:.1f}%"
             )
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # リモートワーク導入シミュレーション
         st.subheader("リモートワーク導入シミュレーション")
@@ -433,7 +472,8 @@ def show():
         remote_long_term_perf = effective_remote_pct / 100 * 0.15
         
         # シミュレーション結果の表示
-        col1, col2 = st.columns(2)
+        # レスポンシブ対応のカラムレイアウト
+        col1, col2 = create_responsive_columns()
         
         with col1:
             st.subheader("短期的影響（3ヶ月）")
@@ -491,6 +531,9 @@ def show():
                 f"{remote_long_term_perf * 100:.1f}%"
             )
         
+        # PDF出力時のページ区切り
+        add_page_break()
+        
         # おすすめの労働環境改善策
         st.subheader("推奨労働環境改善策")
         
@@ -544,7 +587,7 @@ def show():
                 ]
             })
         
-        # 推奨策の表示
+        # 推奨策の表示（レスポンシブ対応）
         for i, rec in enumerate(recommendations):
             expander = st.expander(f"推奨策 {i+1}: {rec['Target']}")
             with expander:

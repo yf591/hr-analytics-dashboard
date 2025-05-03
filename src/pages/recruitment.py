@@ -6,6 +6,13 @@ import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 from src.data.loader import load_hr_data
+# レスポンシブ対応と PDF 出力用のユーティリティをインポート
+from src.utils.layout_utils import (
+    display_optimized_chart,
+    create_responsive_columns,
+    add_page_break,
+    format_dataframe_for_display
+)
 
 def show():
     """
@@ -82,7 +89,7 @@ def show():
         st.header("採用ファネル分析")
         
         # 部門・職種フィルター
-        col1, col2 = st.columns(2)
+        col1, col2 = create_responsive_columns()
         
         with col1:
             dept_filter = st.multiselect(
@@ -141,7 +148,8 @@ def show():
             title="月別採用転換率ヒートマップ"
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 採用ファネルの可視化
         st.subheader("全期間の採用ファネル")
@@ -161,7 +169,12 @@ def show():
         ))
         
         fig.update_layout(title_text="採用ファネル分析")
-        st.plotly_chart(fig, use_container_width=True)
+        
+        # 最適化した図を表示
+        display_optimized_chart(fig)
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # 部門別の採用ファネル効率
         st.subheader("部門別の採用ファネル効率")
@@ -187,7 +200,8 @@ def show():
             text_auto='.1%'
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 職種別の採用難易度分析
         st.subheader("職種別の採用難易度")
@@ -216,7 +230,8 @@ def show():
             }
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 採用プロセスボトルネック分析
         st.subheader("採用プロセスのボトルネック分析")
@@ -250,7 +265,8 @@ def show():
         bottleneck_stage = bottleneck_df.iloc[0]['Stage']
         bottleneck_rate = bottleneck_df.iloc[0]['ConversionRate']
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         st.info(f"**主要なボトルネック**: {bottleneck_stage} (転換率: {bottleneck_rate:.1%})")
         
@@ -285,12 +301,16 @@ def show():
     with tab2:
         st.header("採用コスト分析")
         
+        # PDF出力時のページ区切り
+        add_page_break()
+        
         # 全体の採用コスト概要
         total_cost = filtered_df['CostPerHire'].sum()
         total_hires = filtered_df['Acceptances'].sum()
         avg_cost_per_hire = total_cost / total_hires if total_hires > 0 else 0
         
-        col1, col2, col3 = st.columns(3)
+        # レスポンシブ対応のメトリック表示
+        col1, col2, col3 = create_responsive_columns([1, 1, 1])
         
         with col1:
             st.metric("総採用コスト", f"¥{total_cost:,.0f}")
@@ -356,7 +376,8 @@ def show():
                 fig.data[i].text = ["¥{:,.0f}".format(val) for val in monthly_cost['CostPerHire']]
                 fig.data[i].textposition = 'outside'
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 部門別の採用コスト効率
         st.subheader("部門別の採用コスト効率")
@@ -392,7 +413,12 @@ def show():
             text=["¥{:,.0f}".format(val) for val in dept_cost['CostPerAcceptance']],
             textposition='outside'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        
+        # 最適化した図を表示
+        display_optimized_chart(fig)
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # 職種別の採用コスト効率
         st.subheader("職種別の採用コスト効率")
@@ -414,7 +440,7 @@ def show():
             color_continuous_scale='Reds_r'
         )
         
-        # y軸の範囲を0から20,000,000（20M）に設定
+        # y軸の範囲と書式を設定
         fig.update_layout(
             xaxis_tickangle=-45,
             yaxis=dict(
@@ -429,7 +455,9 @@ def show():
             text=["¥{:,.0f}".format(val) for val in role_cost['CostPerAcceptance']],
             textposition='outside'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 採用コスト最適化シミュレーション
         st.subheader("採用コスト最適化シミュレーション")
@@ -530,7 +558,8 @@ def show():
                 xaxis=dict(title='採用チャネル')
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            # 最適化した図を表示
+            display_optimized_chart(fig)
             
             # コスト削減効果の試算
             current_cost = total_cost
@@ -578,7 +607,8 @@ def show():
                 text_auto='.0f'
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            # 最適化した図を表示
+            display_optimized_chart(fig)
             
             # 効率化目標
             process_improvement = st.slider(
@@ -611,6 +641,9 @@ def show():
     
     with tab3:
         st.header("採用ソース分析")
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # 採用ソース別の効率性
         st.subheader("採用ソース別の効率性")
@@ -664,7 +697,8 @@ def show():
             title="採用ソース効率性レーダーチャート"
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # ソース別の主要指標表
         st.subheader("採用ソース別の主要指標")
@@ -682,7 +716,8 @@ def show():
         source_display['オファー承諾率'] = source_display['オファー承諾率'].map('{:.1%}'.format)
         source_display['採用単価'] = source_display['採用単価'].map('¥{:,.0f}'.format)
         
-        st.dataframe(source_display)
+        # 最適化したデータフレーム表示
+        format_dataframe_for_display(source_display)
         
         # 職種別の効果的な採用ソース
         st.subheader("職種別の効果的な採用ソース")
@@ -722,7 +757,11 @@ def show():
             title="職種別の採用ソース効果ヒートマップ"
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # 提案：職種別の推奨採用ソース
         st.subheader("職種別の推奨採用戦略")
@@ -744,7 +783,8 @@ def show():
             hole=0.4
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 選択した職種に対する推奨戦略
         # 実際のプロジェクトでは、データに基づいた精緻な推奨が必要
@@ -813,7 +853,11 @@ def show():
             markers=True
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
+        
+        # PDF出力時のページ区切り
+        add_page_break()
         
         # 地域別・採用ソース分析（ダミーデータ）
         st.subheader("地域別の効果的な採用ソース")
@@ -868,7 +912,8 @@ def show():
             title="地域別の採用ソース効果ヒートマップ"
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
     
     # フッター
     st.markdown("---")

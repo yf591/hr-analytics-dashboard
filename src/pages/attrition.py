@@ -15,6 +15,8 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import xgboost as xgb
 import lightgbm as lgb
 from src.models.attrition import MODELS
+# レイアウト最適化用のユーティリティをインポート
+from src.utils.layout_utils import display_optimized_chart, create_responsive_columns, add_page_break, format_dataframe_for_display
 
 def show():
     """
@@ -29,7 +31,8 @@ def show():
     # 離職率の概要
     st.header("離職概要")
     
-    col1, col2 = st.columns(2)
+    # レスポンシブ対応のカラムレイアウト
+    col1, col2 = create_responsive_columns()
     
     with col1:
         # 離職数の内訳
@@ -41,7 +44,8 @@ def show():
                      color_discrete_sequence=['#66b3ff', '#ff9999'],
                      hole=0.4)
         fig.update_traces(textposition='inside', textinfo='percent+label')
-        st.plotly_chart(fig)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
     
     with col2:
         # 部門別の離職率
@@ -55,7 +59,11 @@ def show():
                     title='部門別離職率',
                     color='Attrition Rate (%)',
                     color_continuous_scale='Reds')
-        st.plotly_chart(fig)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
+    
+    # PDF出力時のページ区切りを追加（大きなセクション間）
+    add_page_break()
     
     # タブで詳細分析を整理
     tab1, tab2, tab3 = st.tabs(["📊 離職要因分析", "🔍 離職パターン", "🤖 離職予測モデル"])
@@ -75,7 +83,8 @@ def show():
         )
         
         if factors:
-            cols = st.columns(min(3, len(factors)))
+            # モバイル用に1列、デスクトップ用に最大3列で表示
+            cols = create_responsive_columns([1] * min(3, len(factors)))
             
             for i, factor in enumerate(factors):
                 with cols[i % len(cols)]:
@@ -109,7 +118,8 @@ def show():
                                               barmode='group',
                                               color_discrete_map={'Yes': '#ff9999', 'No': '#66b3ff'})
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    # 最適化した図を表示
+                    display_optimized_chart(fig)
         
         # 相関分析（数値変数間）
         st.subheader("数値特徴量間の相関分析")
@@ -122,22 +132,25 @@ def show():
                        zmin=-1, zmax=1,
                        text_auto='.2f')
         
-        # 相関ヒートマップのサイズを2倍に拡大
+        # PDF出力に適したヒートマップサイズに調整
         fig.update_layout(
-            width=1000,  # 幅を拡大（デフォルトより約2倍）
-            height=900,  # 高さを拡大（デフォルトより約2倍）
-            font=dict(size=14)  # フォントサイズも大きくする
+            height=600,  # PDFに収まる高さに調整
+            font=dict(size=10)  # PDF出力用にフォントサイズを調整
         )
         
         # 数値のフォントサイズも調整
         fig.update_traces(
-            textfont=dict(size=12)  # セル内の数値のフォントサイズを調整
+            textfont=dict(size=8)  # セル内の数値のフォントサイズを調整
         )
         
-        st.plotly_chart(fig, use_container_width=False)  # use_container_widthをFalseに変更して指定サイズを維持
+        # 最適化した図を表示
+        display_optimized_chart(fig, use_container_width=True)
     
     with tab2:
         st.header("離職パターン分析")
+        
+        # PDF出力用のページ区切り
+        add_page_break()
         
         # 年齢と勤続年数による離職パターン
         st.subheader("年齢と勤続年数による離職パターン")
@@ -147,7 +160,8 @@ def show():
                         color_discrete_map={'Yes': '#ff9999', 'No': '#66b3ff'},
                         size='MonthlyIncome',
                         hover_data=['JobRole', 'Department', 'JobSatisfaction'])
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 満足度要因と離職の関係
         st.subheader("満足度要因と離職の関係")
@@ -166,7 +180,8 @@ def show():
                     color='Attrition',
                     color_discrete_map={'Yes': '#ff9999', 'No': '#66b3ff'},
                     notched=True)
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 離職コホート分析（勤続年数別）
         st.subheader("勤続年数帯別の離職率")
@@ -184,10 +199,14 @@ def show():
                      markers=True, line_shape='spline',
                      color_discrete_sequence=['#ff9999'])
         fig.update_traces(marker_size=12)
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
     
     with tab3:
         st.header("離職予測モデル")
+        
+        # PDF出力用のページ区切り
+        add_page_break()
         
         # モデル選択UI
         model_type = st.selectbox(
@@ -240,14 +259,19 @@ def show():
             # モデル評価
             accuracy = accuracy_score(y_test, y_pred)
             
-            st.success(f"{model_type}モデルの精度: {accuracy:.2f}")
+            # レスポンシブ対応のメトリック表示
+            col1, col2 = create_responsive_columns()
+            with col1:
+                st.metric("モデル精度", f"{accuracy:.2f}")
+            with col2:
+                st.success(f"{model_type}モデルの学習が完了しました")
             
             # 混同行列 - Plotlyを使用して日本語対応
             st.subheader("混同行列")
             
             cm = confusion_matrix(y_test, y_pred)
             
-            # Plotlyで混同行列を作成（matplotlib/seabornの代わりに）
+            # Plotlyで混同行列を作成
             labels = ['在籍', '離職']
             fig = px.imshow(
                 cm,
@@ -256,21 +280,24 @@ def show():
                 color_continuous_scale='Blues',
                 text_auto=True
             )
-            # 混同行列の大きさを調整 - 縦横ともに大きくする
+            
+            # PDF出力に適した混同行列の大きさに調整
             fig.update_layout(
                 xaxis=dict(title='予測クラス'),
                 yaxis=dict(title='実際のクラス'),
-                width=600,  # 幅を拡大（デフォルトは約400px）
-                height=600, # 高さを拡大（デフォルトは約400px）
-                font=dict(size=16) # フォントサイズも大きくする
+                height=450,  # PDF出力に適した高さ
+                font=dict(size=12)
             )
-            # 数値の表示サイズも大きくする
+            
+            # 数値の表示を調整
             fig.update_traces(
                 text=cm,
                 texttemplate='%{text}',
-                textfont=dict(size=24)  # セル内の数値のフォントサイズを大きくする
+                textfont=dict(size=16)
             )
-            st.plotly_chart(fig)
+            
+            # 最適化した図を表示
+            display_optimized_chart(fig)
             
             # 重要な特徴量の抽出方法を修正
             try:
@@ -322,7 +349,9 @@ def show():
                         color_continuous_scale='Viridis'
                     )
                     fig.update_layout(yaxis={'categoryorder': 'total ascending'})
-                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # 最適化した図を表示
+                    display_optimized_chart(fig)
                 
             except Exception as e:
                 st.error(f"特徴量の重要度を表示できませんでした: {e}")
@@ -350,9 +379,13 @@ def show():
                             color='Importance',
                             color_continuous_scale='Viridis'
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        # 最適化した図を表示
+                        display_optimized_chart(fig)
                 except:
                     st.warning("特徴量重要度の表示に失敗しました。別のモデルを試してみてください。")
+            
+            # PDF出力用のページ区切り
+            add_page_break()
             
             # 離職リスクスコアの分布
             if hasattr(model['classifier'], 'predict_proba'):
@@ -367,14 +400,23 @@ def show():
                                      title=f'{model_type}による離職リスクスコアの分布',
                                      color_discrete_sequence=['#ff9999'])
                     fig.update_layout(bargap=0.1)
-                    st.plotly_chart(fig, use_container_width=True)
                     
-                    # リスクスコアのしきい値選択
-                    threshold = st.slider("リスクスコアのしきい値", 0.0, 1.0, 0.5, 0.05)
-                    high_risk_count = sum(risk_scores >= threshold)
+                    # 最適化した図を表示
+                    display_optimized_chart(fig)
                     
-                    st.metric("高リスク従業員数", f"{high_risk_count}人", 
-                             delta=f"{high_risk_count/len(risk_scores)*100:.1f}% of test set")
+                    # リスクスコアのしきい値選択のUIをよりコンパクトに
+                    col1, col2 = create_responsive_columns()
+                    
+                    with col1:
+                        threshold = st.slider("リスクスコアのしきい値", 0.0, 1.0, 0.5, 0.05)
+                    
+                    with col2:
+                        high_risk_count = sum(risk_scores >= threshold)
+                        st.metric(
+                            "高リスク従業員数", 
+                            f"{high_risk_count}人", 
+                            delta=f"{high_risk_count/len(risk_scores)*100:.1f}%"
+                        )
                 
                 except Exception as e:
                     st.error(f"離職リスクスコアの計算中にエラーが発生しました: {e}")
@@ -391,7 +433,9 @@ def show():
                                     title=f'{model_type}による離職リスクスコアの分布 (トレーニングデータからのサンプル)',
                                     color_discrete_sequence=['#ff9999'])
                     fig.update_layout(bargap=0.1)
-                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # 最適化した図を表示
+                    display_optimized_chart(fig)
                     
                     st.info("注意: 特徴量の不一致により、テストデータでのリスクスコア計算ができませんでした。"\
                            "上のグラフはトレーニングデータのサンプルに基づいています。")

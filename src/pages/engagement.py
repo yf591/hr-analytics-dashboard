@@ -7,6 +7,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from src.data.loader import load_hr_data
 from scipy import stats as scipy_stats  # statsモジュールの名前変更
+# レスポンシブ対応と PDF 出力用のユーティリティをインポート
+from src.utils.layout_utils import (
+    display_optimized_chart,
+    create_responsive_columns,
+    add_page_break,
+    format_dataframe_for_display
+)
 
 def show():
     """
@@ -39,7 +46,7 @@ def show():
     st.header("エンゲージメント概要")
     
     # 各満足度の平均値を表示
-    cols = st.columns(len(satisfaction_cols))
+    cols = create_responsive_columns([1, 1, 1, 1])
     
     for i, col_name in enumerate(satisfaction_cols):
         with cols[i]:
@@ -92,7 +99,7 @@ def show():
             x=0.5
         ))
         
-        st.plotly_chart(fig, use_container_width=True)
+        display_optimized_chart(fig)
         
         # 満足度クロス分析
         st.subheader("満足度間の相関関係")
@@ -111,7 +118,7 @@ def show():
                        text_auto='.2f')
         
         fig.update_layout(title="満足度指標間の相関関係")
-        st.plotly_chart(fig, use_container_width=True)
+        display_optimized_chart(fig)
         
         # グループ別の満足度分析
         st.subheader("グループ別の満足度分析")
@@ -155,7 +162,7 @@ def show():
         if group_by == 'JobRole':
             fig.update_layout(xaxis_tickangle=-45)
         
-        st.plotly_chart(fig, use_container_width=True)
+        display_optimized_chart(fig)
     
     with tab2:
         st.header("エンゲージメント要因分析")
@@ -211,7 +218,7 @@ def show():
                 )
                 
                 fig.update_layout(height=600)
-                st.plotly_chart(fig, use_container_width=True)
+                display_optimized_chart(fig)
             
             # 相関係数の計算と表示
             corr_data = []
@@ -235,7 +242,7 @@ def show():
                         color_discrete_map={'有意': '#1E88E5', '有意でない': '#D81B60'},
                         text_auto='.3f')
             
-            st.plotly_chart(fig, use_container_width=True)
+            display_optimized_chart(fig)
             
             # 詳細な相関データを表示
             st.subheader("詳細な相関分析")
@@ -260,7 +267,7 @@ def show():
                     labels={'Score': '平均スコア', 'OverTime': '残業'},
                     text_auto='.2f')
         
-        st.plotly_chart(fig, use_container_width=True)
+        display_optimized_chart(fig)
         
         # 残業と各満足度の関係についてt検定
         st.subheader("残業の影響度分析（統計的検定）")
@@ -294,7 +301,7 @@ def show():
                     title="残業が満足度に与える影響（t統計量）",
                     text_auto='.3f')
         
-        st.plotly_chart(fig, use_container_width=True)
+        display_optimized_chart(fig)
         
         # 詳細な検定結果を表示
         st.dataframe(ttest_df)
@@ -338,14 +345,14 @@ def show():
                 text=[f"{val:.1f}%" for val in dept_pct['LowEngagementPercentage']],
                 textposition='outside'
             )
-            st.plotly_chart(fig, use_container_width=True)
+            display_optimized_chart(fig)
             
             # 低エンゲージメント従業員の特徴
             st.write("**低エンゲージメント従業員の特徴:**")
             
             # カテゴリ特性
             cat_cols = ['OverTime', 'MaritalStatus', 'JobRole', 'BusinessTravel', 'Gender']
-            col1, col2 = st.columns(2)
+            col1, col2 = create_responsive_columns()
             
             for i, col in enumerate(cat_cols):
                 with col1 if i % 2 == 0 else col2:

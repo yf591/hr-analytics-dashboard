@@ -8,6 +8,13 @@ import plotly.graph_objects as go
 from src.data.loader import load_hr_data
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+# レスポンシブ対応と PDF 出力用のユーティリティをインポート
+from src.utils.layout_utils import (
+    display_optimized_chart,
+    create_responsive_columns,
+    add_page_break,
+    format_dataframe_for_display
+)
 
 def show():
     """
@@ -22,7 +29,8 @@ def show():
     # 全体のパフォーマンス概要
     st.header("パフォーマンス概要")
     
-    col1, col2, col3 = st.columns(3)
+    # レスポンシブ対応のカラムレイアウト
+    col1, col2, col3 = create_responsive_columns([1, 1, 1])
     
     with col1:
         avg_perf = df['PerformanceRating'].mean()
@@ -77,7 +85,8 @@ def show():
             x=0.5
         ))
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 部門・役職別の業績評価
         st.subheader("部門・役職別の業績評価")
@@ -106,7 +115,11 @@ def show():
         if group_by == 'JobRole':
             fig.update_layout(xaxis_tickangle=-45)
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
+        
+        # PDF出力時のページ区切りを挿入
+        add_page_break()
         
         # 業績評価と他の要因の関係
         st.subheader("業績評価と他の要因の関係")
@@ -121,27 +134,39 @@ def show():
         )
         
         if factors:
-            cols = st.columns(min(3, len(factors)))
+            # モバイル対応のためにレスポンシブなカラムを使用
+            cols = create_responsive_columns([1] * min(3, len(factors)))
             
             for i, factor in enumerate(factors):
                 with cols[i % len(cols)]:
-                    if df[factor].dtype in ['int64', 'float64'] and len(df[factor].unique()) > 5:
-                        # 連続変数の場合は散布図
+                    if df[factor].dtype in ['int64', 'float64'] and len(df[factor].unique()) <= 10:
+                        # 少数の値しかない数値変数（例: 1-4のスコア）
+                        factor_perf = df.groupby(factor)['PerformanceRating'].mean().reset_index()
+                        
+                        fig = px.bar(factor_perf, x=factor, y='PerformanceRating',
+                                    title=f"{factor}と業績評価の関係",
+                                    color='PerformanceRating',
+                                    color_continuous_scale='Viridis',
+                                    text_auto='.2f')
+                        
+                    elif df[factor].dtype in ['int64', 'float64']:
+                        # 連続的な数値変数の場合は相関分析
+                        corr = df[[factor, 'PerformanceRating']].corr().iloc[0, 1]
+                        
                         fig = px.scatter(df, x=factor, y='PerformanceRating',
-                                        color='PerformanceRating',
+                                        title=f"{factor}と業績評価の関係 (相関: {corr:.2f})",
+                                        color='PerformanceRating', 
                                         color_continuous_scale='Viridis',
-                                        trendline='ols',
-                                        title=f"{factor}と業績評価の関係")
-                    else:
-                        # カテゴリ変数またはレベル変数の場合は箱ひげ図
-                        fig = px.box(df, x=factor, y='PerformanceRating',
-                                    color=factor,
-                                    title=f"{factor}と業績評価の関係")
+                                        trendline="ols")
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    # 最適化した図を表示
+                    display_optimized_chart(fig)
     
     with tab2:
         st.header("キャリア開発分析")
+        
+        # PDF出力時のページ区切りを挿入
+        add_page_break()
         
         # 昇進分析
         st.subheader("昇進分析")
@@ -156,7 +181,8 @@ def show():
                     text_auto='.1f')
         
         fig.update_traces(texttemplate='%{text}年', textposition='outside')
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 研修と業績の関係
         st.subheader("研修と業績の関係")
@@ -168,7 +194,8 @@ def show():
                      markers=True,
                      line_shape='spline')
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # キャリアパス分析（シミュレーション）
         st.subheader("キャリアパス分析（シミュレーション）")
@@ -179,70 +206,37 @@ def show():
         
         # 部門・役職レベルごとの昇進経路を定義
         for dept in df['Department'].unique():
+            # 各部門でのキャリアパスをシミュレーション
             career_paths[dept] = {}
             
-            # 各ジョブロールの昇進経路を定義
-            roles = df[df['Department'] == dept]['JobRole'].unique()
+            # 部門内の職種を取得
+            dept_roles = df[df['Department'] == dept]['JobRole'].unique()
             
-            for role in roles:
-                # 役職レベルに応じたキャリアパスを定義
-                level_path = []
-                
-                # 現在の役職
-                current_role = {
-                    'role': role,
-                    'level': 1,
-                    'years_required': 0,
-                    'skills_required': [],
-                    'promotion_rate': 0
-                }
-                
-                level_path.append(current_role)
-                
-                # 次のレベルへの昇進をシミュレーション
-                for level in range(2, 6):
-                    # 同じ部門内の可能性のある次の役職
-                    next_roles = df[(df['Department'] == dept) & 
-                                   (df['JobLevel'] >= level)]['JobRole'].unique()
-                    
-                    if len(next_roles) == 0:
-                        break
-                    
-                    next_role = np.random.choice(next_roles)
-                    
-                    # 現在の部門内での昇進か、他部門への異動かを決定
-                    is_promotion = np.random.choice([True, False], p=[0.8, 0.2])
-                    next_dept = dept if is_promotion else np.random.choice(
-                        [d for d in df['Department'].unique() if d != dept]
-                    )
-                    
-                    # 平均昇進年数（レベルが上がるほど長くなる傾向）
-                    years_required = level + np.random.randint(1, 3)
-                    
-                    # スキル要件のシミュレーション
-                    skills = [
-                        'リーダーシップ', '専門知識', 'コミュニケーション', '問題解決能力',
-                        'チームマネジメント', '戦略的思考', '交渉力', 'プロジェクト管理'
+            # 職種ごとにキャリアパスを定義
+            for role in dept_roles:
+                # 例: 営業部門のキャリアパス
+                if dept == 'Sales' and role == 'Sales Representative':
+                    career_paths[dept][role] = [
+                        'Sales Representative',
+                        'Sales Executive',
+                        'Sales Manager',
+                        'Sales Director'
                     ]
-                    required_skills = np.random.choice(
-                        skills, size=min(level+1, len(skills)), replace=False
-                    ).tolist()
-                    
-                    # 昇進率（上位ほど狭き門に）
-                    promotion_rate = max(5, 100 - (level * 15) - np.random.randint(0, 10))
-                    
-                    next_position = {
-                        'role': next_role,
-                        'department': next_dept,
-                        'level': level,
-                        'years_required': years_required,
-                        'skills_required': required_skills,
-                        'promotion_rate': promotion_rate
-                    }
-                    
-                    level_path.append(next_position)
-                
-                career_paths[dept][role] = level_path
+                # 例: 研究開発部門のキャリアパス
+                elif dept == 'Research & Development' and role == 'Laboratory Technician':
+                    career_paths[dept][role] = [
+                        'Laboratory Technician',
+                        'Research Scientist',
+                        'Manager R&D',
+                        'Research Director'
+                    ]
+                # 例: 人事部門のキャリアパス
+                elif dept == 'Human Resources' and role == 'Human Resources':
+                    career_paths[dept][role] = [
+                        'Human Resources',
+                        'HR Manager',
+                        'HR Director'
+                    ]
         
         # 特定の役職のキャリアパスを可視化
         selected_dept = st.selectbox(
@@ -259,98 +253,69 @@ def show():
         )
         
         if selected_dept in career_paths and selected_role in career_paths[selected_dept]:
+            # キャリアパスが定義されている場合
             path = career_paths[selected_dept][selected_role]
             
             # キャリアパスの可視化
-            path_data = []
+            current_pos = path.index(selected_role)
             
-            for step in path:
+            # キャリアパスチャートの作成
+            path_data = []
+            for i, pos in enumerate(path):
+                status = "現在" if pos == selected_role else "将来" if i > current_pos else "過去"
                 path_data.append({
-                    'Level': step.get('level', 0),
-                    'Role': step.get('role', ''),
-                    'Department': step.get('department', selected_dept),
-                    'YearsRequired': step.get('years_required', 0),
-                    'PromotionRate': step.get('promotion_rate', 0)
+                    'Position': pos,
+                    'Step': i,
+                    'Status': status
                 })
             
             path_df = pd.DataFrame(path_data)
             
-            if not path_df.empty and len(path_df) > 1:
-                # キャリアパスの可視化
-                fig = go.Figure()
+            fig = px.scatter(path_df, x='Step', y=[0] * len(path_df), 
+                             text='Position', color='Status',
+                             color_discrete_map={'過去': 'gray', '現在': 'green', '将来': 'blue'},
+                             title="キャリアパス")
+            
+            fig.update_traces(marker=dict(size=20))
+            fig.update_layout(
+                showlegend=True,
+                yaxis=dict(visible=False, showticklabels=False, range=[-1, 1]),
+                xaxis=dict(title='キャリアステージ')
+            )
+            
+            # 最適化した図を表示
+            display_optimized_chart(fig)
+            
+            # 次のポジションに求められるスキル（シミュレーション）
+            if current_pos < len(path) - 1:
+                next_pos = path[current_pos + 1]
+                st.subheader(f"次のポジション ({next_pos}) に必要なスキル")
                 
-                for i, row in path_df.iterrows():
-                    if i < len(path_df) - 1:
-                        next_row = path_df.iloc[i+1]
-                        
-                        # ノード間の線を描画
-                        fig.add_trace(go.Scatter(
-                            x=[row['Level'], next_row['Level']],
-                            y=[1, 1],
-                            mode='lines',
-                            line=dict(width=2, color='rgba(100, 100, 100, 0.5)'),
-                            showlegend=False
-                        ))
+                # 次のポジションに必要なスキルをシミュレーション
+                required_skills = {
+                    'Sales Executive': ['アカウント管理', '交渉力', 'ソリューション提案', 'CRM活用'],
+                    'Sales Manager': ['営業戦略策定', 'チームマネジメント', '売上予測', 'リーダーシップ'],
+                    'Research Scientist': ['実験設計', 'データ分析', '論文執筆', 'プロジェクト管理'],
+                    'Manager R&D': ['研究指導', 'プロジェクト管理', '予算管理', 'チームマネジメント'],
+                    'HR Manager': ['人事制度設計', '労務管理', 'タレントマネジメント', '組織開発']
+                }
                 
-                # 各ポジションのノードを描画
-                fig.add_trace(go.Scatter(
-                    x=path_df['Level'],
-                    y=[1] * len(path_df),
-                    mode='markers+text',
-                    marker=dict(
-                        size=[30 + (10 * l) for l in path_df['Level']],
-                        color=['rgba(55, 126, 184, 0.7)'] * len(path_df),
-                        line=dict(color='rgba(0, 0, 0, 0.5)', width=1)
-                    ),
-                    text=path_df['Role'],
-                    textposition='bottom center',
-                    showlegend=False
-                ))
-                
-                # レイアウト設定
-                fig.update_layout(
-                    title="キャリアパスの可視化",
-                    xaxis=dict(
-                        title="キャリアレベル",
-                        showgrid=False,
-                        zeroline=False,
-                        showticklabels=True,
-                        range=[0.5, max(path_df['Level']) + 0.5]
-                    ),
-                    yaxis=dict(
-                        showgrid=False,
-                        zeroline=False,
-                        showticklabels=False,
-                        range=[0.5, 1.5]
-                    ),
-                    height=300
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # 各ステップの詳細情報
-                for i, step in enumerate(path[1:], 1):
-                    expander = st.expander(f"キャリアステップ {i}: {step['role']} (レベル{step['level']})")
-                    
-                    with expander:
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            st.write(f"**部門:** {step.get('department', selected_dept)}")
-                            st.write(f"**必要経験年数:** {step.get('years_required', 0)}年")
-                            st.write(f"**昇進確率:** {step.get('promotion_rate', 0)}%")
-                        
-                        with col2:
-                            st.write("**必要なスキル**")
-                            for skill in step.get('skills_required', []):
-                                st.write(f"- {skill}")
-            else:
-                st.warning(f"選択された職種 '{selected_role}' のキャリアパスデータが不足しています。")
+                if next_pos in required_skills:
+                    for skill in required_skills[next_pos]:
+                        st.write(f"- {skill}")
+                else:
+                    st.write("- リーダーシップスキル")
+                    st.write("- プロジェクト管理能力")
+                    st.write("- コミュニケーション能力")
+                    st.write("- 専門知識の向上")
         else:
-            st.warning(f"選択された部門 '{selected_dept}' と職種 '{selected_role}' の組み合わせのキャリアパスデータがありません。")
+            st.write("選択した職種のキャリアパスデータがありません。")
     
     with tab3:
         st.header("タレントマッピング")
+        
+        # PDF出力時のページ区切りを挿入
+        add_page_break()
         
         # シンプルなタレントマッピング分析
         st.subheader("業績とポテンシャルのタレントマップ")
@@ -384,23 +349,14 @@ def show():
         
         # 各領域にラベルを追加
         annotations = [
-            # 低業績、低ポテンシャル
             dict(x=1.5, y=1.5, text="要育成", showarrow=False, font=dict(size=12, color="red")),
-            # 低業績、中ポテンシャル
             dict(x=1.5, y=3, text="要観察", showarrow=False, font=dict(size=12, color="orange")),
-            # 低業績、高ポテンシャル
             dict(x=1.5, y=4.5, text="潜在能力有", showarrow=False, font=dict(size=12, color="blue")),
-            # 中業績、低ポテンシャル
             dict(x=3, y=1.5, text="安定貢献", showarrow=False, font=dict(size=12, color="orange")),
-            # 中業績、中ポテンシャル
             dict(x=3, y=3, text="中核人材", showarrow=False, font=dict(size=12, color="black")),
-            # 中業績、高ポテンシャル
             dict(x=3, y=4.5, text="将来有望", showarrow=False, font=dict(size=12, color="green")),
-            # 高業績、低ポテンシャル
             dict(x=4.5, y=1.5, text="専門家", showarrow=False, font=dict(size=12, color="blue")),
-            # 高業績、中ポテンシャル
             dict(x=4.5, y=3, text="高業績者", showarrow=False, font=dict(size=12, color="green")),
-            # 高業績、高ポテンシャル
             dict(x=4.5, y=4.5, text="ハイポテンシャル", showarrow=False, font=dict(size=12, color="purple"))
         ]
         
@@ -420,7 +376,8 @@ def show():
             )
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # 最適化した図を表示
+        display_optimized_chart(fig)
         
         # 部門/職種別のタレント分布
         st.subheader("部門/職種別のタレント分布")
@@ -428,26 +385,26 @@ def show():
         # タレントカテゴリの定義（9-box）
         def get_talent_category(row):
             perf = row['PerformanceRating']
-            pot = row['PotentialScore']
+            potential = row['PotentialScore']
             
             if perf < 2.33:
-                if pot < 2.33:
+                if potential < 2.33:
                     return "要育成"
-                elif pot < 3.67:
+                elif potential < 3.67:
                     return "要観察"
                 else:
                     return "潜在能力有"
             elif perf < 3.67:
-                if pot < 2.33:
+                if potential < 2.33:
                     return "安定貢献"
-                elif pot < 3.67:
+                elif potential < 3.67:
                     return "中核人材"
                 else:
                     return "将来有望"
             else:
-                if pot < 2.33:
+                if potential < 2.33:
                     return "専門家"
-                elif pot < 3.67:
+                elif potential < 3.67:
                     return "高業績者"
                 else:
                     return "ハイポテンシャル"
@@ -455,117 +412,35 @@ def show():
         df['TalentCategory'] = df.apply(get_talent_category, axis=1)
         
         # グループ選択
-        group_by_talent = st.selectbox(
+        group_field = st.selectbox(
             "グループ分け",
-            options=['Department', 'JobRole', 'JobLevel', 'Gender'],
-            key="talent_group",
-            format_func=lambda x: {
-                'Department': '部門',
-                'JobRole': '職種',
-                'JobLevel': '役職レベル',
-                'Gender': '性別'
-            }.get(x, x)
+            options=['Department', 'JobRole'],
+            format_func=lambda x: {'Department': '部門', 'JobRole': '職種'}.get(x, x)
         )
         
-        # タレントカテゴリと選択されたグループのクロス集計
-        talent_cross = pd.crosstab(df[group_by_talent], df['TalentCategory'])
+        # 選択したグループ別のタレントカテゴリ分布
+        talent_dist = df.groupby([group_field, 'TalentCategory']).size().reset_index()
+        talent_dist.columns = [group_field, 'TalentCategory', 'Count']
         
-        # 百分率に変換（行方向）
-        talent_cross_pct = talent_cross.div(talent_cross.sum(axis=1), axis=0) * 100
+        # ピボットテーブルの作成
+        talent_pivot = talent_dist.pivot_table(
+            index=group_field,
+            columns='TalentCategory',
+            values='Count',
+            fill_value=0
+        )
         
-        # ヒートマップの表示
-        fig = px.imshow(talent_cross_pct,
-                       labels=dict(x="タレントカテゴリ", y=group_by_talent, color="割合 (%)"),
-                       text_auto='.1f',
-                       color_continuous_scale='Viridis')
+        # ヒートマップの作成
+        fig = px.imshow(
+            talent_pivot,
+            color_continuous_scale='Viridis',
+            aspect="auto",
+            text_auto=True,
+            title=f"{group_field}別のタレントカテゴリ分布"
+        )
         
-        fig.update_layout(title=f"{group_by_talent}別のタレント分布 (%)")
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # K-means分析によるタレントクラスタリング
-        st.subheader("タレントクラスタリング分析")
-        
-        n_clusters = st.slider("クラスタ数", min_value=2, max_value=6, value=4, step=1)
-        
-        # クラスタリングのための特徴量を選択
-        features = [
-            'PerformanceRating', 'PotentialScore', 'JobSatisfaction', 
-            'TrainingTimesLastYear', 'YearsAtCompany', 'YearsSinceLastPromotion'
-        ]
-        
-        # データの前処理
-        scaler = StandardScaler()
-        X = scaler.fit_transform(df[features])
-        
-        # K-meansクラスタリングの実行
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
-        df['Cluster'] = kmeans.fit_predict(X)
-        
-        # 次元削減なしで2つの主要な特徴量でプロット
-        fig = px.scatter(df, x='PerformanceRating', y='PotentialScore',
-                        color='Cluster',
-                        title="タレントクラスタリング結果",
-                        hover_data=['EmployeeNumber', 'JobRole', 'Department'])
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # クラスターの特徴を表示
-        cluster_profiles = df.groupby('Cluster')[features].mean().reset_index()
-        
-        for i, row in cluster_profiles.iterrows():
-            expander = st.expander(f"クラスター {int(row['Cluster'])+1} のプロファイル")
-            with expander:
-                # レーダーチャート用のデータ準備
-                categories = ['業績評価', 'ポテンシャル', '職務満足度', '研修頻度', '勤続年数', '昇進間隔']
-                values = [
-                    row['PerformanceRating'],
-                    row['PotentialScore'],
-                    row['JobSatisfaction'],
-                    row['TrainingTimesLastYear'],
-                    row['YearsAtCompany'],
-                    row['YearsSinceLastPromotion']
-                ]
-                
-                # レーダーチャートの作成
-                fig = go.Figure()
-                
-                fig.add_trace(go.Scatterpolar(
-                    r=values,
-                    theta=categories,
-                    fill='toself',
-                    name=f'クラスター {int(row["Cluster"])+1}'
-                ))
-                
-                fig.update_layout(
-                    polar=dict(
-                        radialaxis=dict(
-                            visible=True
-                        )
-                    ),
-                    showlegend=False
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # クラスターのサイズ
-                cluster_size = (df['Cluster'] == row['Cluster']).sum()
-                st.write(f"**クラスターサイズ:** {cluster_size}人 ({cluster_size/len(df)*100:.1f}%)")
-                
-                # クラスター内の主要部門・役職
-                dept_dist = df[df['Cluster'] == row['Cluster']]['Department'].value_counts().head(3)
-                role_dist = df[df['Cluster'] == row['Cluster']]['JobRole'].value_counts().head(3)
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.write("**主要部門:**")
-                    for dept, count in dept_dist.items():
-                        st.write(f"- {dept}: {count}人 ({count/cluster_size*100:.1f}%)")
-                
-                with col2:
-                    st.write("**主要職種:**")
-                    for role, count in role_dist.items():
-                        st.write(f"- {role}: {count}人 ({count/cluster_size*100:.1f}%)")
+        # 最適化した図を表示
+        display_optimized_chart(fig)
     
     # フッター
     st.markdown("---")
