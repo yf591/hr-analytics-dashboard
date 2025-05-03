@@ -210,14 +210,62 @@ def show():
             if len(selected_factors) <= 3:
                 col_set = selected_factors + [selected_satisfaction_corr]
                 
+                # 日本語ラベルに変換
+                labels = {k: factor_map.get(k, k) for k in col_set}
+                
                 fig = px.scatter_matrix(
                     df, dimensions=col_set,
                     color='Department',
-                    labels={k: factor_map.get(k, k) for k in col_set},
+                    labels=labels,
                     title=f"要因と{col_name_map[selected_satisfaction_corr]}の関係"
                 )
                 
-                fig.update_layout(height=600)
+                # 動的な高さと幅の調整 - 要因数に応じて調整
+                dynamic_height = 600
+                dynamic_width = 800  # 幅も調整
+                
+                if len(selected_factors) == 3:
+                    dynamic_height = 1000  # 高さを大幅に増加
+                    dynamic_width = 1000   # 幅も増加
+                elif len(selected_factors) > 3:
+                    dynamic_height = 1200
+                    dynamic_width = 1200
+                elif len(selected_factors) == 1:
+                    dynamic_height = 500
+                    dynamic_width = 700
+                
+                # グラフ全体のサイズ設定
+                fig.update_layout(
+                    height=dynamic_height,
+                    width=dynamic_width
+                )
+                
+                # 散布図マトリックスのレイアウト調整
+                for i in range(len(fig.data)):
+                    # グラフ間のマージンを大きくする
+                    fig.update_traces(marker=dict(size=6), selector=dict(type='splom'))
+                
+                # 縦軸ラベルの回転と位置を調整
+                for i in range(len(fig.layout.annotations)):
+                    if fig.layout.annotations[i].textangle == 90:  # 縦軸のラベルのみを対象
+                        fig.layout.annotations[i].textangle = 45  # 45度に傾ける
+                        # 位置を大きく調整
+                        fig.layout.annotations[i].x = -0.15
+                        # フォントサイズを小さくする
+                        fig.layout.annotations[i].font.size = 10
+                
+                # 左マージンをさらに大きく
+                fig.update_layout(
+                    margin=dict(l=150, r=20, t=50, b=30)
+                )
+                
+                # ラベル間のスペースを広げるためにグラフ間のパディングを増加
+                fig.update_layout(
+                    plot_bgcolor='white',  # 背景色を白に
+                    grid=dict(ygap=0.25, xgap=0.25)  # グリッド間のギャップを増加 - 修正済
+                )
+                
+                # 最適化されたグラフを表示
                 display_optimized_chart(fig)
             
             # 相関係数の計算と表示
