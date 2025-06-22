@@ -13,5 +13,5 @@ wordcloud==1.9.3
 nltk==3.8.1
 kaggle==1.5.16
 xgboost==2.0.3
-lightgbm==4.1.0
+lightgbm==4.6.0
 pyngrok
