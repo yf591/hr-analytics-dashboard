@@ -37,6 +37,21 @@ Furthermore, **we envision this tool functioning to** analyze and visualize a wi
 - Python 3.8 or higher
 - pip (package manager)
 
+#### Additional Requirements for macOS Users
+
+If you are using macOS, especially on Apple Silicon (M1/M2/M3), you need to install OpenMP library which is required by LightGBM:
+
+```bash
+# Install OpenMP via Homebrew
+brew install libomp
+
+# Set the required environment variables
+export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
+```
+
+To make these environment variables persistent, you can add them to your `.zshrc` or `.bashrc` file.
+
 ### Installation Steps
 
 1. Clone the repository

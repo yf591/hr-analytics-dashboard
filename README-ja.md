@@ -37,6 +37,21 @@ HR Analytics Dashboardは、人事データを活用して組織の人材マネ�
 - Python 3.8以上
 - pip (パッケージマネージャー)
 
+#### macOSユーザー向けの追加要件
+
+macOS（特にApple Silicon：M1/M2/M3搭載機）を使用している場合、LightGBMが必要とするOpenMPライブラリをインストールする必要があります：
+
+```bash
+# Homebrewを使用してOpenMPをインストール
+brew install libomp
+
+# 必要な環境変数を設定
+export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
+```
+
+これらの環境変数を永続的に設定するには、`.zshrc`または`.bashrc`ファイルに追加することができます。
+
 ### インストール手順
 
 1. リポジトリをクローン
@@ -50,12 +65,12 @@ cd hr-analytics-dashboard
 
 ```bash
 # Windows
-python -m venv venv
-venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 
 # macOS/Linux
-python -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 3. 依存パッケージをインストール
