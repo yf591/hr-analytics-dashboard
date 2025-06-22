@@ -65,12 +65,12 @@ cd hr-analytics-dashboard
 
 ```bash
 # Windows
-python -m venv venv
-venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 
 # macOS/Linux
-python -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 3. Install dependencies
