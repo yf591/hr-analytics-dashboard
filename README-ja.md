@@ -9,6 +9,7 @@ HR Analytics Dashboardは、人事データを活用して組織の人材マネ�
 
 また、ここでは離職予測、採用効率化、人材パフォーマンス、報酬分析、従業員エンゲージメント、労働生産性など幅広い側面を分析＆可視化して、データに基づく意思決定を支援できるようなツールとして機能させたいと考えています。
 
+![top page](docs/asset/toppage.jpeg)
 
 ## 🌟 主な機能
 
@@ -142,14 +143,16 @@ hr-analytics-dashboard/
 - 時系列での離職率トレンド分析
 - 部門/職種/マネージャー別の離職率比較
 - 機械学習による離職予測モデル
-- SHAP値を用いた離職要因の解明**(注意: SHAP値分析による詳細な要因寄与度の可視化機能は、現時点ではUIに実装されていません)**
+- SHAP値を用いた離職要因の解明(**注意: SHAP値分析による詳細な要因寄与度の可視化機能は、現時点ではUIに実装されていません**)
 - 離職リスクの高い従業員の特定
 
 **実装技術:**
 - ランダムフォレスト/勾配ブースティングによる予測モデル
 - 時系列分析による傾向把握
-- SHAP値による要因の可視化**(注意: SHAP値分析による詳細な要因寄与度の可視化機能は、現時点ではUIに実装されていません)**
+- SHAP値による要因の可視化(**注意: SHAP値分析による詳細な要因寄与度の可視化機能は、現時点ではUIに実装されていません**)
 - コホート分析による入社時期別の定着率計算
+
+![Attrition Analysis Page](docs/asset/attrition_analysis.jpeg)
 
 ### 2. 人材獲得分析ページ
 
@@ -168,6 +171,8 @@ hr-analytics-dashboard/
 - 相関分析
 - 時系列集計
 
+![Talent Acquisition Analysis Page](docs/asset/talent_acquisition_analysis.jpeg)
+
 ### 3. 人材育成・パフォーマンス分析ページ
 
 従業員の業績評価と育成施策の効果を分析します。
@@ -185,6 +190,10 @@ hr-analytics-dashboard/
 - クラスタリングによる従業員グループ化
 - 時系列分析による成長曲線の把握
 
+![Talent Development & Performance Analysis Page](docs/asset/talent_dev_and_performance_analysis1.jpeg)
+
+![Talent Development & Performance Analysis Page](docs/asset/talent_dev_and_performance_analysis2.jpeg)
+
 ### 4. 給与・報酬分析ページ
 
 組織の給与構造と報酬の公平性を評価します。
@@ -201,6 +210,9 @@ hr-analytics-dashboard/
 - 統計的検定（t検定、ANOVA）
 - 回帰分析
 - ヒートマップによる給与バンド可視化
+
+![Compensation Analysis Page](docs/asset/compensation_analysis1.jpeg)
+![Compensation Analysis Page](docs/asset/compensation_analysis2.jpeg)
 
 
 ### 5. 従業員エンゲージメントページ
@@ -220,6 +232,9 @@ hr-analytics-dashboard/
 - ワードクラウド
 - 要因分析（因子分析）
 
+![Employee Engagement Page](docs/asset/engagement1.jpeg)
+![Employee Engagement Page](docs/asset/engagement2.jpeg)
+
 
 ### 6. 労働生産性/ワークスタイル分析ページ
 
@@ -237,6 +252,10 @@ hr-analytics-dashboard/
 - 散布図による相関分析
 - 時系列集計
 - クラスタリングによるパターン発見
+
+![Workforce Productivity/Work Style Analysis Page](docs/asset/workstyle_analysis1.jpeg)
+
+![Workforce Productivity/Work Style Analysis Page](docs/asset/workstyle_analysis2.jpeg)
 
 
 ### 7. 予測分析・シミュレーションページ
@@ -256,6 +275,21 @@ hr-analytics-dashboard/
 - 感度分析
 - 最適化アルゴリズム
 - 予測モデルによる将来予測
+
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics1.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics2.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics3.jpeg)
+
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics4.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics5.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics6.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics7.jpeg)
+
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics8.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics9.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics10.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics11.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics12.jpeg)
 
 
 ## 📈 データソース
@@ -307,7 +341,7 @@ hr-analytics-dashboard/
 - **アルゴリズム**: ランダムフォレスト、勾配ブースティング、ロジスティック回帰、XGBoost、LightGBM
 - **特徴量**: 勤続年数、給与レベル、業績評価、昇進間隔、労働時間など
 - **評価指標**: AUC-ROC、精度、リコール（再現率）
-- **説明可能性**: SHAP値によるモデル解釈**(注意: SHAP値分析による詳細な要因寄与度の可視化機能は、現時点ではUIに実装されていません)**
+- **説明可能性**: SHAP値によるモデル解釈(**注意: SHAP値分析による詳細な要因寄与度の可視化機能は、現時点ではUIに実装されていません**)
 
 #### エンゲージメント要因分析
 - **手法**: 主成分分析、因子分析

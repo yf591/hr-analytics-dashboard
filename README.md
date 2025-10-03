@@ -9,6 +9,8 @@ The HR Analytics Dashboard is a comprehensive analytical tool designed to suppor
 
 Furthermore, **we envision this tool functioning to** analyze and visualize a wide range of aspects, such as turnover prediction, recruitment efficiency, employee performance, compensation analysis, employee engagement, and labor productivity, **ultimately supporting** data-driven decision making.
 
+![top page](docs/asset/toppage.jpeg)
+
 
 ## 🌟 Key Features
 
@@ -152,6 +154,8 @@ Understand turnover trends and predict future attrition risks.
 - SHAP values for factor visualization
 - Cohort analysis for retention rates by hire date
 
+![Attrition Analysis Page](docs/asset/attrition_analysis.jpeg)
+
 ### 2. Talent Acquisition Analysis Page
 
 Analyze recruitment process efficiency and source quality.
@@ -168,6 +172,8 @@ Analyze recruitment process efficiency and source quality.
 - Cost-efficiency analysis
 - Correlation analysis
 - Time-series aggregation
+
+![Talent Acquisition Analysis Page](docs/asset/talent_acquisition_analysis.jpeg)
 
 ### 3. Talent Development & Performance Analysis Page
 
@@ -186,6 +192,10 @@ Analyze employee performance evaluations and development initiative impacts.
 - Clustering for employee grouping
 - Time-series analysis for growth curve tracking
 
+![Talent Development & Performance Analysis Page](docs/asset/talent_dev_and_performance_analysis1.jpeg)
+
+![Talent Development & Performance Analysis Page](docs/asset/talent_dev_and_performance_analysis2.jpeg)
+
 ### 4. Compensation Analysis Page
 
 Evaluate organizational compensation structure and pay equity.
@@ -202,6 +212,9 @@ Evaluate organizational compensation structure and pay equity.
 - Statistical tests (t-tests, ANOVA)
 - Regression analysis
 - Heat maps for salary band visualization
+
+![Compensation Analysis Page](docs/asset/compensation_analysis1.jpeg)
+![Compensation Analysis Page](docs/asset/compensation_analysis2.jpeg)
 
 ### 5. Employee Engagement Page
 
@@ -220,6 +233,9 @@ Analyze employee satisfaction and engagement levels.
 - Word clouds
 - Factor analysis
 
+![Employee Engagement Page](docs/asset/engagement1.jpeg)
+![Employee Engagement Page](docs/asset/engagement2.jpeg)
+
 ### 6. Workforce Productivity/Work Style Analysis Page
 
 Analyze the relationship between work styles and productivity.
@@ -237,6 +253,10 @@ Analyze the relationship between work styles and productivity.
 - Time-series aggregation
 - Clustering for pattern discovery
 
+![Workforce Productivity/Work Style Analysis Page](docs/asset/workstyle_analysis1.jpeg)
+
+![Workforce Productivity/Work Style Analysis Page](docs/asset/workstyle_analysis2.jpeg)
+
 ### 7. Predictive Analytics & Simulation Page
 
 Predict the effects of HR initiatives and recommend optimal interventions.
@@ -253,6 +273,21 @@ Predict the effects of HR initiatives and recommend optimal interventions.
 - Sensitivity analysis
 - Optimization algorithms
 - Predictive modeling for future forecasting
+  
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics1.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics2.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics3.jpeg)
+
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics4.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics5.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics6.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics7.jpeg)
+
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics8.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics9.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics10.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics11.jpeg)
+![Predictive Analytics & Simulation Page](docs/asset/predictive_analytics12.jpeg)
 
 ## 📈 Data Sources
 
